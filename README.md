@@ -1,17 +1,39 @@
-# TiketWar - Laravel Fundamental
+# GD6_12776
 
-Repository tugas Pemrograman Aplikasi Web, Modul 6.
+Repository praktikum Modul 6 Laravel Fundamental dengan studi kasus TiketWar.
 
-## Struktur
+## Struktur Repository
 
-- `tiketwar/` - aplikasi Laravel untuk latihan modul.
-- `tiketwar-php/` - base code PHP Modul 4 sebagai bahan pembanding.
+- `README.md` berisi catatan praktikum dan jawaban latihan.
+- `tiketwar/` berisi proyek Laravel.
 
-## Menjalankan aplikasi Laravel
+## Menjalankan Aplikasi
 
 ```powershell
 cd tiketwar
 php artisan serve
 ```
 
-Buka http://127.0.0.1:8000. Jalankan server dari folder `tiketwar`.
+Buka `http://127.0.0.1:8000` di browser.
+
+## Jawaban Latihan Debugging
+
+1. PHP lama masih terpakai karena terminal belum dibuka ulang atau PATH masih menunjuk PHP lama. Tutup dan buka terminal baru, periksa `where php`, letakkan PHP baru di urutan pertama PATH, lalu periksa dengan `php -v`.
+
+## Catatan artisan serve dan composer run dev
+
+Modul ini cukup memakai php artisan serve karena CSS dan gambar dipanggil langsung dari folder public lewat asset(), Bootstrap diambil dari CDN, dan tidak ada file yang perlu dikompilasi sehingga Vite tidak dibutuhkan.
+
+## Versi Tools
+
+- PHP: `8.3.36` (CLI, output `php -v`).
+- Composer: `2.10.3` (output `composer -V`).
+- Laravel Installer: `5.32.0` (output `laravel --version`).
+- Laravel Framework: `13.39.0` (output `php artisan --version`).
+
+2. `php artisan` tidak ditemukan karena terminal berada di folder repository, bukan `tiketwar`. Jalankan `cd tiketwar`.
+3. `composer run dev` menjalankan server Laravel, queue, dan Vite/npm. Untuk modul ini gunakan `php artisan serve` karena aset dibaca dari `public` dan tidak perlu dikompilasi.
+
+4. Ribuan file di Git muncul karena `vendor` tidak diabaikan oleh `.gitignore`. Pastikan baris `/vendor` ada dan, bila sudah masuk staging, keluarkan dengan `git rm -r --cached tiketwar/vendor`.
+5. Parse error terjadi karena perintah `return` tidak diakhiri titik koma. Tambahkan `;`.
+6. `Undefined variable $id` terjadi karena fungsi route tidak menerima parameter. Gunakan `function ($id)`.
