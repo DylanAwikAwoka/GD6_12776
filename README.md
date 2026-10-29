@@ -1,6 +1,8 @@
 # TiketWar - Laravel Fundamental
 
-Repository tugas Pemrograman Aplikasi Web, Modul 6.`r`n`r`nRepository GitHub: `GD6_12776`.
+Repository tugas Pemrograman Aplikasi Web, Modul 6.
+
+Repository GitHub: `GD6_12776`.
 
 ## Struktur
 
@@ -15,4 +17,3 @@ php artisan serve
 ```
 
 Buka http://127.0.0.1:8000. Jalankan server dari folder `tiketwar`.
-
