@@ -30,3 +30,6 @@ Modul ini cukup memakai php artisan serve karena CSS dan gambar dipanggil langsu
 - Composer: `2.10.3` (output `composer -V`).
 - Laravel Installer: `5.32.0` (output `laravel --version`).
 - Laravel Framework: `13.39.0` (output `php artisan --version`).
+
+2. `php artisan` tidak ditemukan karena terminal berada di folder repository, bukan `tiketwar`. Jalankan `cd tiketwar`.
+3. `composer run dev` menjalankan server Laravel, queue, dan Vite/npm. Untuk modul ini gunakan `php artisan serve` karena aset dibaca dari `public` dan tidak perlu dikompilasi.
