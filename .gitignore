@@ -1,0 +1,5 @@
+/tiketwar/.env
+/tiketwar/vendor/
+/tiketwar/node_modules/
+/tiketwar/.phpunit.cache/
+/tiketwar/storage/*.key
