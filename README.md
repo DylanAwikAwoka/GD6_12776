@@ -1,17 +1,21 @@
-# TiketWar - Laravel Fundamental
+# GD6_12776
 
-Repository tugas Pemrograman Aplikasi Web, Modul 6.
+Repository praktikum Modul 6 Laravel Fundamental dengan studi kasus TiketWar.
 
-## Struktur
+## Struktur Repository
 
-- `tiketwar/` - aplikasi Laravel untuk latihan modul.
-- `tiketwar-php/` - base code PHP Modul 4 sebagai bahan pembanding.
+- `README.md` berisi catatan praktikum dan jawaban latihan.
+- `tiketwar/` berisi proyek Laravel.
 
-## Menjalankan aplikasi Laravel
+## Menjalankan Aplikasi
 
 ```powershell
 cd tiketwar
 php artisan serve
 ```
 
-Buka http://127.0.0.1:8000. Jalankan server dari folder `tiketwar`.
+Buka `http://127.0.0.1:8000` di browser.
+
+## Jawaban Latihan Debugging
+
+1. PHP lama masih terpakai karena terminal belum dibuka ulang atau PATH masih menunjuk PHP lama. Tutup dan buka terminal baru, periksa `where php`, letakkan PHP baru di urutan pertama PATH, lalu periksa dengan `php -v`.
