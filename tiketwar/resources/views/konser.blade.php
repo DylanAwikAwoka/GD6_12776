@@ -8,6 +8,7 @@
         <th>No</th>
         <th>Konser</th>
         <th>Kota</th>
+        <th>Tanggal</th>
         <th>Harga</th>
         <th>Sisa</th>
         <th>Status</th>
@@ -20,6 +21,7 @@
             <td>{{ $loop->iteration }}</td>
             <td class="{{ $konser['sisa'] == 0 ? 'sold-out' : '' }}">{{ $konser['nama'] }}</td>
             <td>{{ $konser['kota'] }}</td>
+            <td>{{ date('d-m-Y', strtotime($konser['tanggal'])) }}</td>
             <td>Rp{{ number_format($konser['harga'], 0, ',', '.') }}</td>
             <td>{{ $konser['sisa'] }}</td>
             <td>
@@ -37,7 +39,7 @@
         </tr>
     @empty
         <tr>
-            <td colspan="7" class="text-center">Belum ada konser.</td>
+            <td colspan="8" class="text-center">Belum ada konser.</td>
         </tr>
     @endforelse
     </tbody>
