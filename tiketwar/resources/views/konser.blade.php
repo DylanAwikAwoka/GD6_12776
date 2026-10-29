@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('title', 'Daftar Konser')
+@section('title', $judul ?? 'Daftar Konser')
 @section('content')
 <h1 class="mb-3">{{ $judul ?? 'Daftar Konser' }}</h1>
 <div class="mb-3">
