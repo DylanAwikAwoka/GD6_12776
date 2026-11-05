@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Konser;
-use App\Models\Promotor; // BARU
-use Illuminate\Http\RedirectResponse; // BARU
-use Illuminate\Http\Request; // BARU
+use App\Models\Promotor;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class KonserController extends Controller
@@ -22,14 +22,12 @@ class KonserController extends Controller
         return view('konser-detail', compact('konser'));
     }
 
-    // BARU: menampilkan form tambah
     public function create(): View
     {
         $daftarPromotor = Promotor::orderBy('nama')->get();
         return view('konser-create', compact('daftarPromotor'));
     }
 
-    // BARU: menyimpan data dari form
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
