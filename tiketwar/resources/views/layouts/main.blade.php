@@ -10,6 +10,9 @@
 <body>
 @include('partials.navbar')
 <main class="container mt-4">
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
     @yield('content')
 </main>
 @include('partials.footer')

@@ -1,15 +1,18 @@
 @extends('layouts.main')
 @section('title', 'Daftar Konser')
 @section('content')
-<h1 class="mb-3">Daftar Konser</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Daftar Konser</h1>
+    <a href="{{ route('konser.create') }}" class="btn btn-success">Tambah Konser</a>
+</div>
 <table class="table table-bordered">
     <thead class="table-light">
     <tr>
         <th>No</th>
         <th>Konser</th>
-        <th>Promotor</th> {{-- BARU --}}
+        <th>Promotor</th>
         <th>Kota</th>
-        <th>Tanggal</th> {{-- BARU --}}
+        <th>Tanggal</th>
         <th>Harga</th>
         <th>Sisa</th>
         <th>Status</th>
@@ -17,13 +20,13 @@
     </tr>
     </thead>
     <tbody>
-    @forelse ($daftarKonser as $konser) {{-- DIUBAH --}}
+    @forelse ($daftarKonser as $konser)
         <tr>
             <td>{{ $loop->iteration }}</td>
             <td class="{{ $konser->sisa == 0 ? 'sold-out' : '' }}">{{ $konser->nama }}</td>
-            <td>{{ $konser->promotor->nama }}</td> {{-- BARU --}}
+            <td>{{ $konser->promotor->nama }}</td>
             <td>{{ $konser->kota }}</td>
-            <td>{{ date('d-m-Y', strtotime($konser->tanggal)) }}</td> {{-- BARU --}}
+            <td>{{ date('d-m-Y', strtotime($konser->tanggal)) }}</td>
             <td>Rp{{ number_format($konser->harga, 0, ',', '.') }}</td>
             <td>{{ $konser->sisa }}</td>
             <td>
@@ -42,7 +45,7 @@
         </tr>
     @empty
         <tr>
-            <td colspan="9" class="text-center">Belum ada konser.</td> {{-- DIUBAH: 9 --}}
+            <td colspan="9" class="text-center">Belum ada konser.</td>
         </tr>
     @endforelse
     </tbody>
