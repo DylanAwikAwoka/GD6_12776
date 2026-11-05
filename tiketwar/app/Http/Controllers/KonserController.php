@@ -45,7 +45,6 @@ class KonserController extends Controller
             ->with('success', 'Konser berhasil ditambahkan.');
     }
 
-    // BARU: menampilkan form ubah
     public function edit($id): View
     {
         $konser = Konser::findOrFail($id);
@@ -53,7 +52,6 @@ class KonserController extends Controller
         return view('konser-edit', compact('konser', 'daftarPromotor'));
     }
 
-    // BARU: menyimpan perubahan
     public function update(Request $request, $id): RedirectResponse
     {
         $konser = Konser::findOrFail($id);
@@ -71,5 +69,15 @@ class KonserController extends Controller
 
         return redirect()->route('konser.index')
             ->with('success', 'Konser berhasil diubah.');
+    }
+
+    // BARU: menghapus konser
+    public function destroy($id): RedirectResponse
+    {
+        $konser = Konser::findOrFail($id);
+        $konser->delete();
+
+        return redirect()->route('konser.index')
+            ->with('success', 'Konser berhasil dihapus.');
     }
 }
