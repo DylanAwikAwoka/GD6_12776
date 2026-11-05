@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\KonserController;
+use App\Http\Controllers\PromotorController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -21,6 +22,16 @@ Route::get('/konser/{id}/edit', [KonserController::class, 'edit'])
 Route::put('/konser/{id}', [KonserController::class, 'update'])
     ->whereNumber('id')->name('konser.update');
 Route::delete('/konser/{id}', [KonserController::class, 'destroy'])
-    ->whereNumber('id')->name('konser.destroy'); // BARU
+    ->whereNumber('id')->name('konser.destroy');
+
+Route::get('/promotor', [PromotorController::class, 'index'])->name('promotor.index');
+Route::get('/promotor/create', [PromotorController::class, 'create'])->name('promotor.create');
+Route::post('/promotor', [PromotorController::class, 'store'])->name('promotor.store');
+Route::get('/promotor/{id}/edit', [PromotorController::class, 'edit'])
+    ->whereNumber('id')->name('promotor.edit');
+Route::put('/promotor/{id}', [PromotorController::class, 'update'])
+    ->whereNumber('id')->name('promotor.update');
+Route::delete('/promotor/{id}', [PromotorController::class, 'destroy'])
+    ->whereNumber('id')->name('promotor.destroy');
 
 Route::view('/kontak', 'kontak')->name('kontak');
