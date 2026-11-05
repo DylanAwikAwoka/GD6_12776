@@ -2,9 +2,9 @@
 @section('title', $judul ?? 'Daftar Konser')
 @section('content')
 <h1 class="mb-3">{{ $judul ?? 'Daftar Konser' }}</h1>
-<div class="mb-3">
-    <a href="{{ route('konser.kota', ['kota' => 'Jakarta']) }}" class="btn btn-outline-primary btn-sm">Jakarta</a>
-    <a href="{{ route('konser.kota', ['kota' => 'Yogyakarta']) }}" class="btn btn-outline-primary btn-sm">Yogyakarta</a>
+<div class="d-flex justify-content-between align-items-center mb-3"> {{-- DIUBAH --}}
+    <h1 class="mb-0">Daftar Konser</h1>
+    <a href="{{ route('konser.create') }}" class="btn btn-success">Tambah Konser</a> {{-- BARU --}}
 </div>
 <table class="table table-bordered">
     <thead class="table-light">
