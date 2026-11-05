@@ -11,6 +11,9 @@
         <p class="mb-1">Tanggal: {{ date('d-m-Y', strtotime($konser->tanggal)) }}</p>
         <p class="mb-1">Harga: Rp{{ number_format($konser->harga, 0, ',', '.') }}</p>
         <p>Sisa tiket: {{ $konser->sisa }}</p>
+        @if ($konser->deskripsi)
+            <p>{!! nl2br(e($konser->deskripsi)) !!}</p>
+        @endif
         @if ($konser->sisa > 0)
             <button class="btn btn-primary">War Tiket Sekarang</button>
         @else
