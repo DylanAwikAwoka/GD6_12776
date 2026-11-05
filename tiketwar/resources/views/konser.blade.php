@@ -5,6 +5,21 @@
     <h1 class="mb-0">Daftar Konser</h1>
     <a href="{{ route('konser.create') }}" class="btn btn-success">Tambah Konser</a>
 </div>
+
+<form action="{{ route('konser.index') }}" method="GET" class="row g-2 mb-3">
+    <div class="col-auto">
+        <select name="kota" class="form-select">
+            <option value="">Semua kota</option>
+            @foreach ($daftarKota as $kota)
+                <option value="{{ $kota }}" @selected(request('kota') == $kota)>{{ $kota }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </div>
+</form>
+
 <table class="table table-bordered">
     <thead class="table-light">
     <tr>
@@ -43,7 +58,6 @@
                    class="btn btn-sm btn-primary">Detail</a>
                 <a href="{{ route('konser.edit', ['id' => $konser->id]) }}"
                    class="btn btn-sm btn-warning">Edit</a>
-                {{-- BARU: form hapus --}}
                 <form action="{{ route('konser.destroy', ['id' => $konser->id]) }}"
                       method="POST" class="d-inline"
                       onsubmit="return confirm('Hapus konser ini?')">
