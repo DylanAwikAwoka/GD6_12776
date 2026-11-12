@@ -15,7 +15,8 @@
             <p>{!! nl2br(e($konser->deskripsi)) !!}</p>
         @endif
         @if ($konser->sisa > 0)
-            <button class="btn btn-primary">War Tiket Sekarang</button>
+            <a href="{{ route('pesanan.create', $konser) }}"
+               class="btn btn-primary">War Tiket Sekarang</a>
         @else
             <button class="btn btn-secondary" disabled>Sold Out</button>
         @endif

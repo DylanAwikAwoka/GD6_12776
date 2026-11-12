@@ -71,3 +71,8 @@ Modul ini cukup memakai php artisan serve karena CSS dan gambar dipanggil langsu
 ## Jawaban Pertanyaan Seeder
 
 Menjalankan `php artisan migrate:fresh --seed` berulang kali tidak menambah jumlah baris (tetap 3 promotor dan 5 konser). `migrate:fresh` menghapus semua tabel beserta datanya terlebih dahulu, lalu membuat ulang tabel dari migration, baru seeder mengisi data awal. Jadi setiap eksekusi dimulai dari tabel kosong dan hasilnya selalu sama, bukan menumpuk di atas data lama.
+
+## Jawaban Latihan Debugging (Modul 7)
+
+1. **Total diambil dari form.** Kesalahannya: nilai `total` dipercaya dari `<input type="hidden" name="total">` (`$request->total`), padahal isi form bisa diubah lewat DevTools sebelum dikirim. Bahayanya, pembeli bisa mengubah `total` menjadi 1 sehingga 5 tiket terbayar seharga 1 tiket (kerugian finansial dan data laporan tidak akurat). Perbaikannya: hapus input `total` dari form, lalu hitung di server dengan `'total' => $terkunci->harga * $data['jumlah']` (harga diambil dari data konser, bukan dari request).
+2. **Pengecekan stok tanpa kunci.** Kesalahannya: `$konser->sisa` dibaca **di luar** transaksi dan tanpa `lockForUpdate()`, sehingga dua pembeli bisa membaca `sisa` yang sama sebelum salah satunya menyimpan. Bahayanya terjadi oversell: tiket terjual dua kali dan `sisa` bisa menjadi minus. Perbaikannya: bungkus alur simpan dalam `DB::transaction()`, baca ulang konser dengan `Konser::lockForUpdate()->findOrFail($konser->id)` **di dalam** transaksi, cek `$data['jumlah'] > $terkunci->sisa` dari baris yang sudah terkunci, baru `decrement('sisa', ...)`.
