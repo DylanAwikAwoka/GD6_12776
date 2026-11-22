@@ -3,7 +3,9 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="mb-0">Daftar Konser</h1>
-    <a href="{{ route('konser.create') }}" class="btn btn-success">Tambah Konser</a>
+    @auth
+        <a href="{{ route('konser.create') }}" class="btn btn-success">Tambah Konser</a>
+    @endauth
 </div>
 
 <form action="{{ route('konser.index') }}" method="GET" class="row g-2 mb-3">
@@ -56,15 +58,17 @@
             <td>
                 <a href="{{ route('konser.detail', ['id' => $konser->id]) }}"
                    class="btn btn-sm btn-primary">Detail</a>
-                <a href="{{ route('konser.edit', ['id' => $konser->id]) }}"
-                   class="btn btn-sm btn-warning">Edit</a>
-                <form action="{{ route('konser.destroy', ['id' => $konser->id]) }}"
-                      method="POST" class="d-inline"
-                      onsubmit="return confirm('Hapus konser ini?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
-                </form>
+                @auth
+                    <a href="{{ route('konser.edit', ['id' => $konser->id]) }}"
+                       class="btn btn-sm btn-warning">Edit</a>
+                    <form action="{{ route('konser.destroy', ['id' => $konser->id]) }}"
+                          method="POST" class="d-inline"
+                          onsubmit="return confirm('Hapus konser ini?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                    </form>
+                @endauth
             </td>
         </tr>
     @empty

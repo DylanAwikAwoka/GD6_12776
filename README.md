@@ -95,3 +95,8 @@ Form itu tidak memiliki `@csrf`, sehingga tidak membawa token CSRF yang diperiks
 
 Kesalahannya ada beberapa. Pertama, kata sandi dibandingkan dengan `!==` terhadap kolom `password`, padahal kolom itu menyimpan hash; perbandingan teks biasa tidak akan cocok dengan hash, dan kalau bisa cocok berarti kata sandi disimpan sebagai teks biasa. Kedua, tidak ada `Auth::attempt`, sehingga verifikasi hash dan pencatatan session tidak dilakukan dengan benar. Ketiga, pesan "Email tidak terdaftar" dan "Kata sandi salah" berbeda, sehingga penyerang bisa menebak email mana yang terdaftar (user enumeration). Keempat, tidak ada `session()->regenerate()` setelah login, sehingga rawan session fixation, dan tidak ada `redirect()->intended()` serta validasi input. Perbaikannya: gunakan `Auth::attempt($credentials)` dengan pesan gagal yang sama, lalu `session()->regenerate()` dan `redirect()->intended(route('pesanan.index'))` seperti pada `AuthController@login`.
 
+### Debugging 5: Tombol hilang, halaman tetap terbuka
+
+Penyebabnya, `@auth` hanya mengatur tampilan: tombol tidak digambar untuk pengunjung, tetapi route `/konser/create` dan `POST /konser` tetap terbuka karena tidak memakai middleware `auth`. Siapa pun bisa mengetik alamatnya atau mengirim POST langsung dan menambah konser. `@auth` bukan perlindungan, melainkan kenyamanan tampilan. Perbaikannya: masukkan route admin ke dalam `Route::middleware('auth')->group(function () { ... })` pada `routes/web.php`, lalu cek dengan `php artisan route:list -v --path=konser` bahwa `konser.create`, `konser.store`, `konser.edit`, `konser.update`, dan `konser.destroy` memiliki middleware `Illuminate\Auth\Middleware\Authenticate`, sedangkan `konser.index` dan `konser.detail` tidak.
+
+
