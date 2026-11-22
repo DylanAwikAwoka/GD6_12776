@@ -76,3 +76,13 @@ Menjalankan `php artisan migrate:fresh --seed` berulang kali tidak menambah juml
 
 1. **Total diambil dari form.** Kesalahannya: nilai `total` dipercaya dari `<input type="hidden" name="total">` (`$request->total`), padahal isi form bisa diubah lewat DevTools sebelum dikirim. Bahayanya, pembeli bisa mengubah `total` menjadi 1 sehingga 5 tiket terbayar seharga 1 tiket (kerugian finansial dan data laporan tidak akurat). Perbaikannya: hapus input `total` dari form, lalu hitung di server dengan `'total' => $terkunci->harga * $data['jumlah']` (harga diambil dari data konser, bukan dari request).
 2. **Pengecekan stok tanpa kunci.** Kesalahannya: `$konser->sisa` dibaca **di luar** transaksi dan tanpa `lockForUpdate()`, sehingga dua pembeli bisa membaca `sisa` yang sama sebelum salah satunya menyimpan. Bahayanya terjadi oversell: tiket terjual dua kali dan `sisa` bisa menjadi minus. Perbaikannya: bungkus alur simpan dalam `DB::transaction()`, baca ulang konser dengan `Konser::lockForUpdate()->findOrFail($konser->id)` **di dalam** transaksi, cek `$data['jumlah'] > $terkunci->sisa` dari baris yang sudah terkunci, baru `decrement('sisa', ...)`.
+
+## Jawaban Latihan Debugging (Modul 8: API dan Autentikasi)
+
+### Debugging 1: Pesanan dari semua isian
+
+Kesalahannya, `Pesanan::create($request->all())` meneruskan seluruh isi body JSON ke mass assignment. Karena `$fillable` pada model `Pesanan` memuat `konser_id`, `harga_satuan`, `total`, dan `status`, klien bisa mengirim nilai-nilai itu sendiri. Pada contoh, pesanan tersimpan dengan `konser_id` 1, `harga_satuan` 1, `total` 1, dan `status` `lunas`, sehingga penyusup mendapat tiket hampir gratis dan statusnya langsung lunas. Ini berbahaya karena aturan bisnis (harga, total, status, dan stok) diambil dari klien, bukan dihitung server. Perbaikannya: validasi hanya `nama_pemesan`, `email`, dan `jumlah`; ambil konser dari route; lalu hitung `harga_satuan`, `total`, dan `status` di server seperti pada `Api\PesananController@store`. Jangan pernah memakai `$request->all()` untuk membuat data.
+
+### Debugging 2: Postman menerima HTML
+
+Penyebabnya, request tidak membawa header `Accept: application/json`, sehingga Laravel menganggap kliennya browser. Middleware `auth` lalu mengalihkan pengunjung yang belum login ke route bernama `login`; sebelum route login dibuat hasilnya error `Route [login] not defined`, dan sesudah route login dibuat hasilnya halaman HTML login dengan status 200. Perbaikannya: kirim header `Accept: application/json` pada setiap request API. Dengan header itu `$request->expectsJson()` bernilai benar, sehingga middleware mengembalikan 401 JSON `{"message":"Unauthenticated."}` dan tidak mengalihkan ke halaman login.
