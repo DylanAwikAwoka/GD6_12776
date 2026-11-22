@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\KonserController;
 use App\Http\Controllers\Api\PesananController;
+use App\Http\Controllers\Api\TokenController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,3 +17,13 @@ Route::get('/konser/{konser}', [KonserController::class, 'show'])
     ->whereNumber('konser')->name('api.konser.show');
 Route::post('/konser/{konser}/pesanan', [PesananController::class, 'store'])
     ->whereNumber('konser')->name('api.pesanan.store');
+
+// Token admin (Tugas Rumah: Sanctum dan Audit Keamanan)
+Route::post('/login', [TokenController::class, 'store'])
+    ->name('api.login');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [TokenController::class, 'destroy'])
+        ->name('api.logout');
+    Route::get('/admin/pesanan', [PesananController::class, 'index'])
+        ->name('api.admin.pesanan.index');
+});
