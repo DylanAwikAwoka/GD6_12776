@@ -126,4 +126,20 @@ Limiter itu dipasang pada dua pintu login: `POST /login` memakai `['guest', 'thr
 
 Catatan: uji butir 3, 7, dan 10 memakai perubahan sementara. Sebelum commit, route `/uji-error` dihapus, nama konser dikembalikan, `@csrf` dipasang lagi, dan tidak ada perubahan `APP_DEBUG` yang ikut ke repository.
 
+## Jawaban Unguided Modul 8
+
+Semua soal dikerjakan di branch `unguided/modul8`. Branch ini sengaja dipush dan dibuka Pull Request-nya, tetapi tidak di-merge ke `main`.
+
+### Soal 1: Filter Konser Berdasarkan Kota
+
+`GET /api/konser` sekarang menerima `?kota=...` opsional. Tanpa parameter tetap tampil semua konser; kota yang tidak ada menghasilkan `"data": []`, bukan error.
+
+**Pertanyaan — mengapa aman dari SQL injection?** Karena filter ditulis lewat Eloquent/Query Builder (`where('kota', $kota)`), nilai dari `$request->query('kota')` dikirim sebagai parameter terikat (prepared statement), bukan digabungkan ke dalam string SQL. Nilai tersebut juga hanya dipakai sebagai pembanding kolom, sehingga karakter khusus tidak pernah diartikan sebagai perintah SQL.
+
+**Hasil uji:**
+
+- `GET /api/konser` → 200, 5 konser (Bandung, Yogyakarta, Jakarta, Bali).
+- `GET /api/konser?kota=Bandung` → 200, 1 konser, semua ber-kota Bandung.
+- `GET /api/konser?kota=KotaTakAda` → 200, `"data": []`.
+
 
