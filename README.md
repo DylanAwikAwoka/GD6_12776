@@ -167,4 +167,18 @@ Token dari `POST /api/login` dibuat dengan `createToken('postman', ['pesanan:bac
 - Token yang sama setelah 25 detik → 401 `Unauthenticated.`.
 - Setelah dikembalikan ke `addHour()`, login ulang → 200 dan `GET /api/admin/pesanan` → 200.
 
+### Soal 4: Ganti Kata Sandi Admin
+
+Ditambahkan `AkunController` dengan `showPassword()` dan `updatePassword()`, dua route di dalam grup `auth` (`GET /akun/password` bernama `akun.password` dan `PUT /akun/password` bernama `akun.password.update`), view `akun/password.blade.php`, serta tautan "Ganti Password" di navbar. Validasi memakai aturan `current_password` dan `password => required|string|min:8|confirmed`; kata sandi baru disimpan lewat `$request->user()->update(['password' => $data['password']])` dan otomatis di-hash oleh cast `hashed` pada model `User`.
+
+**Pertanyaan — dampak bila `php artisan migrate:fresh --seed` dijalankan lagi setelah kata sandi diganti?** `ADMIN_PASSWORD` di `.env` menjadi usang. `AdminSeeder` memakai `config('admin.password')` (sumbernya `.env`) dan `updateOrCreate`, sehingga seeding ulang akan menimpa hash kata sandi baru dengan kata sandi lama dari `.env`. Artinya kata sandi baru yang diganti lewat form hilang setelah reseed; agar tetap dipakai, nilai `ADMIN_PASSWORD` di `.env` lokal juga harus diperbarui (tanpa pernah di-commit).
+
+**Hasil uji:**
+
+- Kata sandi lama salah → ditolak dengan pesan validasi.
+- Konfirmasi tidak cocok → ditolak dengan pesan `confirmed`.
+- Kata sandi baru kurang dari 8 karakter → ditolak dengan pesan panjang minimum.
+- Kasus berhasil → 302 ke `/pesanan` dan pesan "Kata sandi berhasil diganti." tampil; logout lalu login dengan kata sandi baru berhasil, login dengan kata sandi lama gagal.
+- Database dikembalikan dengan `migrate:fresh --seed` setelah uji agar kata sandi di `.env` lagi yang berlaku.
+
 
