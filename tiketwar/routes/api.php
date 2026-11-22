@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\KonserController;
+use App\Http\Controllers\Api\LaporanController as ApiLaporanController;
 use App\Http\Controllers\Api\PesananController;
 use App\Http\Controllers\Api\TokenController;
 use Illuminate\Http\Request;
@@ -27,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/pesanan', [PesananController::class, 'index'])
         ->middleware('abilities:pesanan:baca')
         ->name('api.admin.pesanan.index');
+    Route::get('/admin/laporan', [ApiLaporanController::class, 'index'])
+        ->name('api.admin.laporan.index');
 
     // Kelola konser untuk admin
     Route::post('/konser', [KonserController::class, 'store'])

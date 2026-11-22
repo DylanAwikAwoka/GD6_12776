@@ -209,4 +209,17 @@ Ditambahkan `bayar()` dan `batal()` pada `Api\PesananController` dengan route `P
 - Buat pesanan kedua → 201, sisa 55. `PATCH .../batal` → 200 status `batal` dan sisa kembali 56; `PATCH .../bayar` pada pesanan batal → 409.
 - `PATCH .../bayar` tanpa token → 401.
 
+### Soal 7: API Laporan Ringkasan untuk Admin
+
+Dibuat `Api\LaporanController` (di-import dengan alias `ApiLaporanController` agar tidak bentrok dengan `LaporanController` web) dan route `GET /api/admin/laporan` di dalam grup `auth:sanctum`. Respons memakai `count()`, `sum('total')` hanya untuk pesanan `lunas`, dan agregasi `selectRaw`/`groupBy`/`pluck` untuk `per_status`. Nilai `sum` dikonversi ke `(int)`.
+
+**Pertanyaan — mengapa menghitung di database lebih baik?** Karena database sudah dioptimalkan untuk agregasi: ia memindai baris yang relevan (dan bisa memakai indeks) lalu mengirim hanya beberapa angka ke aplikasi. Mengambil semua pesanan lalu menjumlahkannya di PHP memakan memori, bandwidth, dan waktu bertambah seiring jumlah data, serta logika perhitungan tersebar di kode aplikasi.
+
+**Hasil uji:**
+
+- `GET /api/admin/laporan` dengan token → 200:
+  `{"data":{"jumlah_pesanan":8,"total_pendapatan":5800000,"per_status":{"batal":2,"lunas":4,"menunggu_bayar":2}}}`.
+- `GET /api/admin/laporan` tanpa token → 401.
+- Dashboard web `/laporan` pada saat yang sama menampilkan total 8, pendapatan Rp5.800.000, menunggu 2, dan batal 2 — angkanya cocok.
+
 
