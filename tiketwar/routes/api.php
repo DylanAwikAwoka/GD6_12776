@@ -35,4 +35,10 @@ Route::middleware('auth:sanctum')->group(function () {
         ->whereNumber('konser')->name('api.konser.update');
     Route::delete('/konser/{konser}', [KonserController::class, 'destroy'])
         ->whereNumber('konser')->name('api.konser.destroy');
+
+    // Kelola status pesanan untuk admin
+    Route::patch('/pesanan/{pesanan}/bayar', [PesananController::class, 'bayar'])
+        ->whereNumber('pesanan')->name('api.pesanan.bayar');
+    Route::patch('/pesanan/{pesanan}/batal', [PesananController::class, 'batal'])
+        ->whereNumber('pesanan')->name('api.pesanan.batal');
 });

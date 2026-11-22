@@ -196,4 +196,17 @@ Ditambahkan `store()`, `update()`, dan `destroy()` pada `Api\KonserController` p
 - `DELETE /api/konser/1` (masih punya pesanan) → 409 dengan pesan yang jelas.
 - `POST`, `PUT`, dan `DELETE` tanpa token → 401.
 
+### Soal 6: API Bayar dan Batal Pesanan untuk Admin
+
+Ditambahkan `bayar()` dan `batal()` pada `Api\PesananController` dengan route `PATCH /api/pesanan/{pesanan}/bayar` dan `/batal` di dalam grup `auth:sanctum`. Keduanya berjalan dalam `DB::transaction()`, mengunci baris pesanan dengan `lockForUpdate()`, dan hanya memproses status `menunggu_bayar`. Pembatalan juga mengunci konser dan mengembalikan stok dengan `increment('sisa', $terkunci->jumlah)`. Status yang tidak sesuai ditolak 409.
+
+**Pertanyaan — mengapa status dicek di dalam transaksi setelah `lockForUpdate`?** Karena pengecekan sebelum penguncian rentan race condition: dua permintaan bersamaan bisa sama-sama membaca status `menunggu_bayar`, lalu keduanya melanjutkan. Salah satunya bisa membayar atau membatalkan pesanan yang sudah diubah, dan pada pembatalan stok bisa dikembalikan dua kali. Dengan mengunci baris lebih dulu lalu mengecek status di dalam transaksi, permintaan kedua baru melihat hasil permintaan pertama setelah lock dilepas, sehingga aturan status dan stok tetap konsisten.
+
+**Hasil uji:**
+
+- Sisa konser 5 awalnya 57.
+- Buat pesanan (jumlah 1) → 201, sisa menjadi 56. `PATCH .../bayar` → 200 dengan status `lunas`; `PATCH .../batal` pada pesanan itu → 409.
+- Buat pesanan kedua → 201, sisa 55. `PATCH .../batal` → 200 status `batal` dan sisa kembali 56; `PATCH .../bayar` pada pesanan batal → 409.
+- `PATCH .../bayar` tanpa token → 401.
+
 
