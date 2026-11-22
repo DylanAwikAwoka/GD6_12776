@@ -181,4 +181,19 @@ Ditambahkan `AkunController` dengan `showPassword()` dan `updatePassword()`, dua
 - Kasus berhasil → 302 ke `/pesanan` dan pesan "Kata sandi berhasil diganti." tampil; logout lalu login dengan kata sandi baru berhasil, login dengan kata sandi lama gagal.
 - Database dikembalikan dengan `migrate:fresh --seed` setelah uji agar kata sandi di `.env` lagi yang berlaku.
 
+### Soal 5: API CRUD Konser untuk Admin
+
+Ditambahkan `store()`, `update()`, dan `destroy()` pada `Api\KonserController` plus tiga route di dalam grup `auth:sanctum`. Aturan validasi disatukan di method privat `aturan()` dan dipakai ulang untuk tambah dan ubah, termasuk `exists:App\Models\Promotor,id`. Hanya data hasil `validate()` yang disimpan; `destroy()` menolak 409 bila konser masih memiliki pesanan.
+
+**Pertanyaan — mengapa hapus memakai 204 dan mengapa konser berpesanan tidak boleh dihapus?** `204 No Content` berarti operasi berhasil tetapi tidak ada badan respons yang perlu dikirim; mengirim 200 dengan JSON kosong tidak memberi informasi tambahan. Konser yang sudah punya pesanan tidak boleh dihapus karena pesanan, pembayaran, dan laporan merujuk pada `konser_id` itu: penghapusan akan membuat riwayat transaksi kehilangan konteks atau menjadi data yatim. Lebih aman menolak penghapusan (atau menandai konser tidak tersedia) sampai pesanannya diselesaikan.
+
+**Hasil uji:**
+
+- `POST /api/konser` dengan data valid → 201 dan JSON konser baru (id 6).
+- `POST` dengan `promotor_id: 9999` → 422.
+- `PUT /api/konser/6` → 200, nama/kota/harga/sisa/tanggal berubah.
+- `DELETE /api/konser/6` (tanpa pesanan) → 204 tanpa isi.
+- `DELETE /api/konser/1` (masih punya pesanan) → 409 dengan pesan yang jelas.
+- `POST`, `PUT`, dan `DELETE` tanpa token → 401.
+
 

@@ -27,4 +27,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/pesanan', [PesananController::class, 'index'])
         ->middleware('abilities:pesanan:baca')
         ->name('api.admin.pesanan.index');
+
+    // Kelola konser untuk admin
+    Route::post('/konser', [KonserController::class, 'store'])
+        ->name('api.konser.store');
+    Route::put('/konser/{konser}', [KonserController::class, 'update'])
+        ->whereNumber('konser')->name('api.konser.update');
+    Route::delete('/konser/{konser}', [KonserController::class, 'destroy'])
+        ->whereNumber('konser')->name('api.konser.destroy');
 });
