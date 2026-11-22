@@ -35,7 +35,7 @@ Route::post('/konser/{konser}/pesan', [PesananController::class, 'store'])
 Route::get('/login', [AuthController::class, 'showLogin'])
     ->middleware('guest')->name('login');
 Route::post('/login', [AuthController::class, 'login'])
-    ->middleware('guest')->name('login.proses');
+    ->middleware(['guest', 'throttle:login'])->name('login.proses');
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')->name('logout');
 

@@ -99,4 +99,31 @@ Kesalahannya ada beberapa. Pertama, kata sandi dibandingkan dengan `!==` terhada
 
 Penyebabnya, `@auth` hanya mengatur tampilan: tombol tidak digambar untuk pengunjung, tetapi route `/konser/create` dan `POST /konser` tetap terbuka karena tidak memakai middleware `auth`. Siapa pun bisa mengetik alamatnya atau mengirim POST langsung dan menambah konser. `@auth` bukan perlindungan, melainkan kenyamanan tampilan. Perbaikannya: masukkan route admin ke dalam `Route::middleware('auth')->group(function () { ... })` pada `routes/web.php`, lalu cek dengan `php artisan route:list -v --path=konser` bahwa `konser.create`, `konser.store`, `konser.edit`, `konser.update`, dan `konser.destroy` memiliki middleware `Illuminate\Auth\Middleware\Authenticate`, sedangkan `konser.index` dan `konser.detail` tidak.
 
+## Audit Keamanan 10 Butir (Tugas Rumah: Guided 2)
+
+Branch: `feature/audit-keamanan`. Pembatas percobaan login didefinisikan di `app/Providers/AppServiceProvider.php` dengan nama `login`:
+
+```php
+RateLimiter::for('login', function (Request $request) {
+    return Limit::perMinute(5)->by($request->input('email').'|'.$request->ip());
+});
+```
+
+Limiter itu dipasang pada dua pintu login: `POST /login` memakai `['guest', 'throttle:login']` dan `POST /api/login` memakai `throttle:login`. Menggabungkan email dan IP berarti satu email tidak ikut terkunci hanya karena orang lain salah mengetik dari alamat berbeda.
+
+| # | Butir | Hasil | Bukti ringkas |
+|---|-------|-------|---------------|
+| 1 | Halaman admin wajib login, dicek di server | Lulus | Saat logout, `/pesanan`, `/laporan`, `/konser/create`, dan `/konser/1/edit` semuanya `302` ke `/login`. |
+| 2 | Semua aksi pengubah data dilindungi, bukan hanya tombolnya | Lulus | `php artisan route:list -v` menunjukkan `konser.store/update/destroy`, `promotor.store/update/destroy`, `pesanan.bayar/batal`, dan `pesanan.store` (web) memakai `Illuminate\Auth\Middleware\Authenticate`. `POST /api/konser/{konser}/pesanan` sengaja tetap publik karena itu alur beli tiket pelanggan; endpoint admin API memakai `Authenticate:sanctum`. |
+| 3 | Mode debug mati di produksi (`APP_DEBUG=false`, `APP_ENV=production`) | Lulus | Route sementara `/uji-error` menghasilkan 500. Dengan `APP_DEBUG=true` halaman memuat `Exception`, pesan `uji`, dan stack trace; dengan `APP_DEBUG=false` hanya tampil halaman `Server Error` generik. Route sementara sudah dihapus; nilai `.env` lokal dikembalikan seperti semula. |
+| 4 | `.env` tidak masuk Git dan tidak bisa diakses publik | Lulus | `git ls-files` tidak menemukan `.env` maupun `vendor/`; `GET /.env` menjawab `404`. Kredensial admin hanya ada di `.env` lokal dan `.env.example` berisi nama kunci tanpa nilai rahasia. |
+| 5 | Kata sandi disimpan sebagai hash | Lulus | Kolom `password` pada tabel `users` diawali `$2y$12$`, bukan teks biasa. Hash itu berasal dari cast `password => hashed` pada model `User`. |
+| 6 | HTTPS saat produksi | Lulus (catatan) | Saat hosting, HTTPS wajib agar kredensial login, cookie session, dan token Bearer tidak terkirim sebagai teks terbuka; `php artisan serve` memakai HTTP hanya untuk pengembangan lokal. |
+| 7 | Mencegah injection dan XSS | Lulus | Nama konser sementara diubah menjadi `<script>alert(1)</script>`. Halaman `/konser` menampilkannya sebagai `&lt;script&gt;alert(1)&lt;/script&gt;` dan tidak ada tag skrip mentah. Query memakai Eloquent/parameter binding dan model memakai `$fillable`; nama konser sudah dikembalikan. |
+| 8 | Validasi dan aturan bisnis di server | Lulus | `POST /api/konser/1/pesanan` dengan body tambahan `total: 1`, `status: "lunas"`, dan `harga_satuan: 1` tetap menghasilkan `harga_satuan` dan `total` 1500000 serta `status` `menunggu_bayar`; stok berkurang 22 menjadi 21. |
+| 9 | Login tahan tebakan | Lulus | Pesan gagal web dan API sama untuk email tidak terdaftar maupun kata sandi salah; `AuthController@login` memanggil `session()->regenerate()`. Percobaan ke-1 sampai ke-5 salah menghasilkan `401` (API) / `302` kembali ke form (web), percobaan ke-6 menghasilkan `429 Too Many Attempts` pada kedua pintu. |
+| 10 | CSRF aktif di form web dan CORS dibatasi | Sebagian: CSRF Lulus, CORS Tidak | Menghapus `@csrf` sementara dari form login membuat POST tanpa `_token` ditolak `419`; token sudah dipasang kembali. Namun `GET /api/konser` dengan `Origin: https://example.com` masih membalas `Access-Control-Allow-Origin: *` (default Laravel), jadi CORS belum dibatasi ke origin dikenal dan perlu diatur di modul Integrasi. |
+
+Catatan: uji butir 3, 7, dan 10 memakai perubahan sementara. Sebelum commit, route `/uji-error` dihapus, nama konser dikembalikan, `@csrf` dipasang lagi, dan tidak ada perubahan `APP_DEBUG` yang ikut ke repository.
+
 

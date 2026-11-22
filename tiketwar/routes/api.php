@@ -20,7 +20,7 @@ Route::post('/konser/{konser}/pesanan', [PesananController::class, 'store'])
 
 // Token admin (Tugas Rumah: Sanctum dan Audit Keamanan)
 Route::post('/login', [TokenController::class, 'store'])
-    ->name('api.login');
+    ->middleware('throttle:login')->name('api.login');
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [TokenController::class, 'destroy'])
         ->name('api.logout');
