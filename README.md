@@ -155,4 +155,16 @@ Token dari `POST /api/login` dibuat dengan `createToken('postman', ['pesanan:bac
 - Token pembanding dari tinker (`createToken('lain', ['konser:baca'])`) → 403.
 - `GET /api/admin/pesanan` tanpa token → 401 `Unauthenticated.`.
 
+### Soal 3: Token Kedaluwarsa
+
+`TokenController@store` sekarang memakai argumen ketiga `createToken`, yaitu `now()->addHour()`, sehingga token dari `POST /api/login` berlaku satu jam. Ability tetap `['pesanan:baca']`, dan kolom `expires_at` pada tabel `personal_access_tokens` terisi.
+
+**Pertanyaan — mengapa token yang tidak pernah kedaluwarsa berbahaya bila bocor?** Karena token berlaku selamanya sampai dicabut secara manual. Bila token bocor, penyerang bisa memakainya kapan saja untuk mengakses data admin, dan korban baru aman setelah token tersebut ditemukan lalu dicabut. Kedaluwarsa membatasi jendela penyalahgunaan; kredensial juga tetap perlu diganti bila dugaan kebocoran terjadi.
+
+**Hasil uji:** Untuk mempercepat pengujian, masa berlaku sementara diubah menjadi `now()->addSeconds(20)`, lalu dikembalikan ke `addHour()` sebelum commit.
+
+- Token 20 detik langsung dipakai → 200.
+- Token yang sama setelah 25 detik → 401 `Unauthenticated.`.
+- Setelah dikembalikan ke `addHour()`, login ulang → 200 dan `GET /api/admin/pesanan` → 200.
+
 
