@@ -126,4 +126,100 @@ Limiter itu dipasang pada dua pintu login: `POST /login` memakai `['guest', 'thr
 
 Catatan: uji butir 3, 7, dan 10 memakai perubahan sementara. Sebelum commit, route `/uji-error` dihapus, nama konser dikembalikan, `@csrf` dipasang lagi, dan tidak ada perubahan `APP_DEBUG` yang ikut ke repository.
 
+## Jawaban Unguided Modul 8
+
+Semua soal dikerjakan di branch `unguided/modul8`. Branch ini sengaja dipush dan dibuka Pull Request-nya, tetapi tidak di-merge ke `main`.
+
+### Soal 1: Filter Konser Berdasarkan Kota
+
+`GET /api/konser` sekarang menerima `?kota=...` opsional. Tanpa parameter tetap tampil semua konser; kota yang tidak ada menghasilkan `"data": []`, bukan error.
+
+**Pertanyaan — mengapa aman dari SQL injection?** Karena filter ditulis lewat Eloquent/Query Builder (`where('kota', $kota)`), nilai dari `$request->query('kota')` dikirim sebagai parameter terikat (prepared statement), bukan digabungkan ke dalam string SQL. Nilai tersebut juga hanya dipakai sebagai pembanding kolom, sehingga karakter khusus tidak pernah diartikan sebagai perintah SQL.
+
+**Hasil uji:**
+
+- `GET /api/konser` → 200, 5 konser (Bandung, Yogyakarta, Jakarta, Bali).
+- `GET /api/konser?kota=Bandung` → 200, 1 konser, semua ber-kota Bandung.
+- `GET /api/konser?kota=KotaTakAda` → 200, `"data": []`.
+
+### Soal 2: Token dengan Hak Akses Terbatas
+
+Token dari `POST /api/login` dibuat dengan `createToken('postman', ['pesanan:baca'])`. Route `GET /api/admin/pesanan` berada di dalam grup `auth:sanctum` dan ditambah `abilities:pesanan:baca`. Alias middleware `abilities` dan `ability` didaftarkan di `bootstrap/app.php` memakai `CheckAbilities` dan `CheckForAnyAbility` dari Sanctum.
+
+**Pertanyaan — apa bedanya 401 dan 403?** `401 Unauthorized` berarti klien belum terbukti identitasnya: token tidak dikirim, salah, sudah dicabut, atau kedaluwarsa, sehingga `auth:sanctum` menolak. `403 Forbidden` berarti klien sudah dikenali (token sah) tetapi tidak punya hak untuk aksi itu, sehingga `abilities` yang menolak. Pada uji ini, permintaan tanpa token menghasilkan 401; token pembanding ber-ability `konser:baca` menghasilkan 403; token dari login admin yang ber-ability `pesanan:baca` menghasilkan 200.
+
+**Hasil uji:**
+
+- `POST /api/login` → 200, token dengan ability `pesanan:baca`.
+- `GET /api/admin/pesanan` dengan token itu → 200, berisi daftar pesanan.
+- Token pembanding dari tinker (`createToken('lain', ['konser:baca'])`) → 403.
+- `GET /api/admin/pesanan` tanpa token → 401 `Unauthenticated.`.
+
+### Soal 3: Token Kedaluwarsa
+
+`TokenController@store` sekarang memakai argumen ketiga `createToken`, yaitu `now()->addHour()`, sehingga token dari `POST /api/login` berlaku satu jam. Ability tetap `['pesanan:baca']`, dan kolom `expires_at` pada tabel `personal_access_tokens` terisi.
+
+**Pertanyaan — mengapa token yang tidak pernah kedaluwarsa berbahaya bila bocor?** Karena token berlaku selamanya sampai dicabut secara manual. Bila token bocor, penyerang bisa memakainya kapan saja untuk mengakses data admin, dan korban baru aman setelah token tersebut ditemukan lalu dicabut. Kedaluwarsa membatasi jendela penyalahgunaan; kredensial juga tetap perlu diganti bila dugaan kebocoran terjadi.
+
+**Hasil uji:** Untuk mempercepat pengujian, masa berlaku sementara diubah menjadi `now()->addSeconds(20)`, lalu dikembalikan ke `addHour()` sebelum commit.
+
+- Token 20 detik langsung dipakai → 200.
+- Token yang sama setelah 25 detik → 401 `Unauthenticated.`.
+- Setelah dikembalikan ke `addHour()`, login ulang → 200 dan `GET /api/admin/pesanan` → 200.
+
+### Soal 4: Ganti Kata Sandi Admin
+
+Ditambahkan `AkunController` dengan `showPassword()` dan `updatePassword()`, dua route di dalam grup `auth` (`GET /akun/password` bernama `akun.password` dan `PUT /akun/password` bernama `akun.password.update`), view `akun/password.blade.php`, serta tautan "Ganti Password" di navbar. Validasi memakai aturan `current_password` dan `password => required|string|min:8|confirmed`; kata sandi baru disimpan lewat `$request->user()->update(['password' => $data['password']])` dan otomatis di-hash oleh cast `hashed` pada model `User`.
+
+**Pertanyaan — dampak bila `php artisan migrate:fresh --seed` dijalankan lagi setelah kata sandi diganti?** `ADMIN_PASSWORD` di `.env` menjadi usang. `AdminSeeder` memakai `config('admin.password')` (sumbernya `.env`) dan `updateOrCreate`, sehingga seeding ulang akan menimpa hash kata sandi baru dengan kata sandi lama dari `.env`. Artinya kata sandi baru yang diganti lewat form hilang setelah reseed; agar tetap dipakai, nilai `ADMIN_PASSWORD` di `.env` lokal juga harus diperbarui (tanpa pernah di-commit).
+
+**Hasil uji:**
+
+- Kata sandi lama salah → ditolak dengan pesan validasi.
+- Konfirmasi tidak cocok → ditolak dengan pesan `confirmed`.
+- Kata sandi baru kurang dari 8 karakter → ditolak dengan pesan panjang minimum.
+- Kasus berhasil → 302 ke `/pesanan` dan pesan "Kata sandi berhasil diganti." tampil; logout lalu login dengan kata sandi baru berhasil, login dengan kata sandi lama gagal.
+- Database dikembalikan dengan `migrate:fresh --seed` setelah uji agar kata sandi di `.env` lagi yang berlaku.
+
+### Soal 5: API CRUD Konser untuk Admin
+
+Ditambahkan `store()`, `update()`, dan `destroy()` pada `Api\KonserController` plus tiga route di dalam grup `auth:sanctum`. Aturan validasi disatukan di method privat `aturan()` dan dipakai ulang untuk tambah dan ubah, termasuk `exists:App\Models\Promotor,id`. Hanya data hasil `validate()` yang disimpan; `destroy()` menolak 409 bila konser masih memiliki pesanan.
+
+**Pertanyaan — mengapa hapus memakai 204 dan mengapa konser berpesanan tidak boleh dihapus?** `204 No Content` berarti operasi berhasil tetapi tidak ada badan respons yang perlu dikirim; mengirim 200 dengan JSON kosong tidak memberi informasi tambahan. Konser yang sudah punya pesanan tidak boleh dihapus karena pesanan, pembayaran, dan laporan merujuk pada `konser_id` itu: penghapusan akan membuat riwayat transaksi kehilangan konteks atau menjadi data yatim. Lebih aman menolak penghapusan (atau menandai konser tidak tersedia) sampai pesanannya diselesaikan.
+
+**Hasil uji:**
+
+- `POST /api/konser` dengan data valid → 201 dan JSON konser baru (id 6).
+- `POST` dengan `promotor_id: 9999` → 422.
+- `PUT /api/konser/6` → 200, nama/kota/harga/sisa/tanggal berubah.
+- `DELETE /api/konser/6` (tanpa pesanan) → 204 tanpa isi.
+- `DELETE /api/konser/1` (masih punya pesanan) → 409 dengan pesan yang jelas.
+- `POST`, `PUT`, dan `DELETE` tanpa token → 401.
+
+### Soal 6: API Bayar dan Batal Pesanan untuk Admin
+
+Ditambahkan `bayar()` dan `batal()` pada `Api\PesananController` dengan route `PATCH /api/pesanan/{pesanan}/bayar` dan `/batal` di dalam grup `auth:sanctum`. Keduanya berjalan dalam `DB::transaction()`, mengunci baris pesanan dengan `lockForUpdate()`, dan hanya memproses status `menunggu_bayar`. Pembatalan juga mengunci konser dan mengembalikan stok dengan `increment('sisa', $terkunci->jumlah)`. Status yang tidak sesuai ditolak 409.
+
+**Pertanyaan — mengapa status dicek di dalam transaksi setelah `lockForUpdate`?** Karena pengecekan sebelum penguncian rentan race condition: dua permintaan bersamaan bisa sama-sama membaca status `menunggu_bayar`, lalu keduanya melanjutkan. Salah satunya bisa membayar atau membatalkan pesanan yang sudah diubah, dan pada pembatalan stok bisa dikembalikan dua kali. Dengan mengunci baris lebih dulu lalu mengecek status di dalam transaksi, permintaan kedua baru melihat hasil permintaan pertama setelah lock dilepas, sehingga aturan status dan stok tetap konsisten.
+
+**Hasil uji:**
+
+- Sisa konser 5 awalnya 57.
+- Buat pesanan (jumlah 1) → 201, sisa menjadi 56. `PATCH .../bayar` → 200 dengan status `lunas`; `PATCH .../batal` pada pesanan itu → 409.
+- Buat pesanan kedua → 201, sisa 55. `PATCH .../batal` → 200 status `batal` dan sisa kembali 56; `PATCH .../bayar` pada pesanan batal → 409.
+- `PATCH .../bayar` tanpa token → 401.
+
+### Soal 7: API Laporan Ringkasan untuk Admin
+
+Dibuat `Api\LaporanController` (di-import dengan alias `ApiLaporanController` agar tidak bentrok dengan `LaporanController` web) dan route `GET /api/admin/laporan` di dalam grup `auth:sanctum`. Respons memakai `count()`, `sum('total')` hanya untuk pesanan `lunas`, dan agregasi `selectRaw`/`groupBy`/`pluck` untuk `per_status`. Nilai `sum` dikonversi ke `(int)`.
+
+**Pertanyaan — mengapa menghitung di database lebih baik?** Karena database sudah dioptimalkan untuk agregasi: ia memindai baris yang relevan (dan bisa memakai indeks) lalu mengirim hanya beberapa angka ke aplikasi. Mengambil semua pesanan lalu menjumlahkannya di PHP memakan memori, bandwidth, dan waktu bertambah seiring jumlah data, serta logika perhitungan tersebar di kode aplikasi.
+
+**Hasil uji:**
+
+- `GET /api/admin/laporan` dengan token → 200:
+  `{"data":{"jumlah_pesanan":8,"total_pendapatan":5800000,"per_status":{"batal":2,"lunas":4,"menunggu_bayar":2}}}`.
+- `GET /api/admin/laporan` tanpa token → 401.
+- Dashboard web `/laporan` pada saat yang sama menampilkan total 8, pendapatan Rp5.800.000, menunggu 2, dan batal 2 — angkanya cocok.
+
 

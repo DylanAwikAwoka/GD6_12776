@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AkunController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KonserController;
 use App\Http\Controllers\LaporanController;
@@ -70,6 +71,12 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('pesanan')->name('pesanan.bayar');
     Route::patch('/pesanan/{pesanan}/batal', [PesananController::class, 'batal'])
         ->whereNumber('pesanan')->name('pesanan.batal');
+
+    // Ganti kata sandi admin
+    Route::get('/akun/password', [AkunController::class, 'showPassword'])
+        ->name('akun.password');
+    Route::put('/akun/password', [AkunController::class, 'updatePassword'])
+        ->name('akun.password.update');
 
     // Laporan
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
