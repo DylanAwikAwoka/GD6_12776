@@ -25,5 +25,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [TokenController::class, 'destroy'])
         ->name('api.logout');
     Route::get('/admin/pesanan', [PesananController::class, 'index'])
+        ->middleware('abilities:pesanan:baca')
         ->name('api.admin.pesanan.index');
 });

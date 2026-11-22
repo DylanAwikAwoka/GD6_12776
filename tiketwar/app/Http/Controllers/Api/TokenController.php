@@ -26,7 +26,7 @@ class TokenController extends Controller
             ], 401);
         }
 
-        $token = $user->createToken('postman')->plainTextToken;
+        $token = $user->createToken('postman', ['pesanan:baca'])->plainTextToken;
 
         return response()->json(['token' => $token]);
     }

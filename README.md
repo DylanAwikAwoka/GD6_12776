@@ -142,4 +142,17 @@ Semua soal dikerjakan di branch `unguided/modul8`. Branch ini sengaja dipush dan
 - `GET /api/konser?kota=Bandung` → 200, 1 konser, semua ber-kota Bandung.
 - `GET /api/konser?kota=KotaTakAda` → 200, `"data": []`.
 
+### Soal 2: Token dengan Hak Akses Terbatas
+
+Token dari `POST /api/login` dibuat dengan `createToken('postman', ['pesanan:baca'])`. Route `GET /api/admin/pesanan` berada di dalam grup `auth:sanctum` dan ditambah `abilities:pesanan:baca`. Alias middleware `abilities` dan `ability` didaftarkan di `bootstrap/app.php` memakai `CheckAbilities` dan `CheckForAnyAbility` dari Sanctum.
+
+**Pertanyaan — apa bedanya 401 dan 403?** `401 Unauthorized` berarti klien belum terbukti identitasnya: token tidak dikirim, salah, sudah dicabut, atau kedaluwarsa, sehingga `auth:sanctum` menolak. `403 Forbidden` berarti klien sudah dikenali (token sah) tetapi tidak punya hak untuk aksi itu, sehingga `abilities` yang menolak. Pada uji ini, permintaan tanpa token menghasilkan 401; token pembanding ber-ability `konser:baca` menghasilkan 403; token dari login admin yang ber-ability `pesanan:baca` menghasilkan 200.
+
+**Hasil uji:**
+
+- `POST /api/login` → 200, token dengan ability `pesanan:baca`.
+- `GET /api/admin/pesanan` dengan token itu → 200, berisi daftar pesanan.
+- Token pembanding dari tinker (`createToken('lain', ['konser:baca'])`) → 403.
+- `GET /api/admin/pesanan` tanpa token → 401 `Unauthenticated.`.
+
 
