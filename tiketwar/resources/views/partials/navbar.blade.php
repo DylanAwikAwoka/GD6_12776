@@ -5,6 +5,7 @@
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Beranda</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('konser.*') ? 'active' : '' }}" href="{{ route('konser.index') }}">Konser</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('pesanan.*') ? 'active' : '' }}" href="{{ route('pesanan.index') }}">Pesanan</a></li>
+            <li class="nav-item"><a class="nav-link {{ request()->routeIs('laporan.*') ? 'active' : '' }}" href="{{ route('laporan.index') }}">Laporan</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('promotor.*') ? 'active' : '' }}" href="{{ route('promotor.index') }}">Promotor</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('tentang') ? 'active' : '' }}" href="{{ route('tentang') }}">Tentang</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('kontak') ? 'active' : '' }}" href="{{ route('kontak') }}">Kontak</a></li>
