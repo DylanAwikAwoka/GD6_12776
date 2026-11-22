@@ -13,6 +13,11 @@ use Illuminate\Validation\ValidationException;
 
 class PesananController extends Controller
 {
+    public function index()
+    {
+        return PesananResource::collection(Pesanan::latest()->get());
+    }
+
     public function store(Request $request, Konser $konser): JsonResponse
     {
         $data = $request->validate([
