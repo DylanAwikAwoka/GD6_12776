@@ -86,3 +86,12 @@ Kesalahannya, `Pesanan::create($request->all())` meneruskan seluruh isi body JSO
 ### Debugging 2: Postman menerima HTML
 
 Penyebabnya, request tidak membawa header `Accept: application/json`, sehingga Laravel menganggap kliennya browser. Middleware `auth` lalu mengalihkan pengunjung yang belum login ke route bernama `login`; sebelum route login dibuat hasilnya error `Route [login] not defined`, dan sesudah route login dibuat hasilnya halaman HTML login dengan status 200. Perbaikannya: kirim header `Accept: application/json` pada setiap request API. Dengan header itu `$request->expectsJson()` bernilai benar, sehingga middleware mengembalikan 401 JSON `{"message":"Unauthenticated."}` dan tidak mengalihkan ke halaman login.
+
+### Debugging 3: Login yang selalu 419
+
+Form itu tidak memiliki `@csrf`, sehingga tidak membawa token CSRF yang diperiksa Laravel pada setiap POST. Server menolak permintaan dengan 419 Page Expired. Perbaikannya: tambahkan `@csrf` di dalam `<form>`. Mematikan pemeriksaan CSRF (misalnya mengecualikan route login dari middleware `VerifyCsrfToken`) bukan perbaikan, karena justru membuka celah CSRF: situs lain bisa mengirim form login atas nama pengunjung, dan perlindungan terhadap permintaan lintas situs hilang.
+
+### Debugging 4: Login buatan sendiri
+
+Kesalahannya ada beberapa. Pertama, kata sandi dibandingkan dengan `!==` terhadap kolom `password`, padahal kolom itu menyimpan hash; perbandingan teks biasa tidak akan cocok dengan hash, dan kalau bisa cocok berarti kata sandi disimpan sebagai teks biasa. Kedua, tidak ada `Auth::attempt`, sehingga verifikasi hash dan pencatatan session tidak dilakukan dengan benar. Ketiga, pesan "Email tidak terdaftar" dan "Kata sandi salah" berbeda, sehingga penyerang bisa menebak email mana yang terdaftar (user enumeration). Keempat, tidak ada `session()->regenerate()` setelah login, sehingga rawan session fixation, dan tidak ada `redirect()->intended()` serta validasi input. Perbaikannya: gunakan `Auth::attempt($credentials)` dengan pesan gagal yang sama, lalu `session()->regenerate()` dan `redirect()->intended(route('pesanan.index'))` seperti pada `AuthController@login`.
+
