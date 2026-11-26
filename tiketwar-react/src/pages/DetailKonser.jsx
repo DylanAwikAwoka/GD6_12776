@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
+import FormPesan from '../components/FormPesan';
 import Pemberitahuan from '../components/Pemberitahuan';
 import { getKonser } from '../services/api';
 import { formatRupiah, formatTanggal } from '../utils/format';
@@ -32,6 +33,11 @@ export default function DetailKonser() {
     };
   }, [id]);
 
+  // Dipanggil FormPesan setelah pesanan berhasil, agar sisa tiket ikut turun.
+  function kurangiSisa(pesanan) {
+    setKonser((lama) => ({ ...lama, sisa: lama.sisa - pesanan.jumlah }));
+  }
+
   if (memuat) return <Pemberitahuan>Memuat konser...</Pemberitahuan>;
   if (error) {
     return (
@@ -52,6 +58,11 @@ export default function DetailKonser() {
       </p>
       <p className="harga">{formatRupiah(konser.harga)}</p>
       <p>Sisa tiket: {konser.sisa}</p>
+
+      {konser.sisa === 0 && (
+        <Pemberitahuan jenis="error">Tiket habis.</Pemberitahuan>
+      )}
+      <FormPesan konser={konser} onBerhasil={kurangiSisa} />
     </section>
   );
 }
