@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { formatRupiah, formatTanggal } from '../utils/format';
 
 export default function KonserCard({ konser }) {
@@ -17,6 +18,9 @@ export default function KonserCard({ konser }) {
           <span className="lencana">Sisa {konser.sisa}</span>
         )}
       </p>
+      <Link to={`/konser/${konser.id}`} className="tombol">
+        Lihat detail
+      </Link>
     </article>
   );
 }
