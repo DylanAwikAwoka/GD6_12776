@@ -222,4 +222,30 @@ Dibuat `Api\LaporanController` (di-import dengan alias `ApiLaporanController` ag
 - `GET /api/admin/laporan` tanpa token → 401.
 - Dashboard web `/laporan` pada saat yang sama menampilkan total 8, pendapatan Rp5.800.000, menunggu 2, dan batal 2 — angkanya cocok.
 
+## Jawaban Latihan Debugging (Modul 9: React dan Integrasi Laravel)
+
+### Debugging 1: Kotak pencarian tidak bisa diketik
+
+Kesalahannya, input memakai `value={kataKunci}` tanpa `onChange`. Itu menjadikan input controlled yang nilainya sepenuhnya ditentukan state. Saat pengguna mengetik, state tidak berubah, sehingga penggambaran berikutnya mengembalikan nilai ke `''` dan kotak tampak kosong; Console memberi peringatan bahwa `value` diberikan tanpa `onChange`. Perbaikannya: `onChange={(e) => setKataKunci(e.target.value)}`, sehingga setiap ketikan mengubah state dan React menggambar ulang dengan nilai terbaru.
+
+### Debugging 2: Alamat API tidak terbaca
+
+Kesalahannya, nama variabel di `.env` adalah `API_URL`, bukan `VITE_API_URL`. Vite hanya meneruskan variabel berawalan `VITE_` ke `import.meta.env`, jadi `import.meta.env.VITE_API_URL` bernilai `undefined`. Template literal lalu membentuk alamat `undefined/konser`, yaitu permintaan relatif ke server Vite itself (`http://localhost:5173/undefined/konser`); Vite menjawab `index.html` dengan status 200. Karena isinya HTML, `response.json()` menghasilkan `null` dan `body.data` memicu "Cannot read properties of null". Perbaikannya: `VITE_API_URL=http://127.0.0.1:8000/api`, lalu hentikan dan jalankan ulang `npm run dev` karena `.env` hanya dibaca saat Vite dinyalakan.
+
+### Debugging 3: Permintaan tanpa henti
+
+Kesalahannya, `useEffect` ditulis tanpa argumen kedua, sehingga efek dijalankan setelah **setiap** penggambaran ulang. Efek memanggil `setDaftar(data)`, yang mengubah state dan memicu penggambaran ulang, yang menjalankan efek lagi, dan seterusnya: ratusan permintaan dan kipas berputar. Perbaikannya: `useEffect(() => {...}, [])` karena data hanya diambil sekali saat komponen tampil. Bila efek bergantung pada nilai seperti `id`, gunakan `[id]` agar tetap dijalankan ulang hanya saat nilai itu berubah.
+
+### Debugging 4: Detail selalu "tidak ditemukan"
+
+Kesalahannya, nama parameter pada route (`:konserId`) berbeda dengan nama yang dibaca komponen (`const { id } = useParams()`). `useParams()` mengembalikan `{ konserId: '5' }`, jadi `id` bernilai `undefined`. Efek lalu memanggil `getKonser(undefined)`, menghasilkan permintaan ke `/api/konser/undefined` yang ditolak (404), sehingga pesan "Konser tidak ditemukan." tampil untuk semua konser. Perbaikannya: samakan namanya, misalnya `path="/konser/:id"` di `App.jsx` seperti pada modul.
+
+### Debugging 5: Semua isian dianggap kosong
+
+Kesalahannya, header `Content-Type: application/json` dihapus dari `request()` pada `api.js`. Fungsi `buatPesanan` sudah mengubah objek menjadi teks dengan `JSON.stringify`, tetapi tanpa header itu Laravel menganggap body sebagai form biasa dan tidak mengurai JSON. Akibatnya `$request->validated()` melihat semua isian kosong dan membalas 422, walaupun tab Payload menampilkan data yang benar. Ini sama seperti memilih tipe body **Text**, bukan **JSON**, di Postman. Perbaikannya: kembalikan header `Content-Type: application/json` untuk setiap permintaan yang memiliki `body`.
+
+### Debugging 6: Server hidup, tetapi React tidak bisa terhubung
+
+Kesalahannya, `allowed_origins` diisi `http://localhost:3000`, sedangkan aplikasi React berjalan di port 5173. Browser mengirim header `Origin: http://localhost:5173`; Laravel tidak memasukkan origin itu dalam daftar izin, sehingga tidak mengirim header `Access-Control-Allow-Origin`. Header itu yang menentukan apakah JavaScript boleh membaca balasan. Yang menolak adalah **browser**, bukan Laravel: server tetap menjawab (dan Postman tidak terkena CORS karena bukan browser). Karena balasan disembunyikan browser, `fetch` melempar error dan `api.js` menampilkan pesan umum "Tidak dapat terhubung ke server...". Perbaikannya: isi `allowed_origins` dengan `http://localhost:5173` dan `http://127.0.0.1:5173`, lalu jalankan `php artisan config:clear` dan muat ulang halaman.
+
 
